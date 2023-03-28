@@ -1,16 +1,34 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-
+import CryptoAPI  from './datasources/CryptoAPI.js';
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
-// your data.
+// your data. 
+
 const typeDefs = `#graphql
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
 
   # This "Book" type defines the queryable fields for every book in our data source.
   type Book {
     title: String
-    author: String
+    author: Author
+  }
+ 
+  type Author {
+    name: String,
+  }
+
+  type Cat {
+    name: String,
+    breed: String,
+    coat: String
+  }
+
+  type Currency {
+    code: String,
+    symbol: String,
+    rate: String,
+    description: String
   }
 
   # The "Query" type is special: it lists all of the available queries that
@@ -18,13 +36,17 @@ const typeDefs = `#graphql
   # case, the "books" query returns an array of zero or more Books (defined above).
   type Query {
     books: [Book]
+    cats: [Cat]
+    currencies: [Currency]
   }
-`;
+`; 
 
 const books = [
     {
       title: 'The Awakening',
-      author: 'Kate Chopin',
+      author: {
+        name: 'Kate Chopin',
+      },
     },
     {
       title: 'City of Glass',
@@ -32,11 +54,29 @@ const books = [
     },
   ];
 
+  const cats = [
+    {
+        name: "george",
+        breed: "american shorthair",
+        coat: "short",
+    },
+    {
+        name: "Bill",
+        breed: "British shorthair",
+        coat: null,
+    },
+  ]
+
   // Resolvers define how to fetch the types defined in your schema.
 // This resolver retrieves books from the "books" array above.
 const resolvers = {
     Query: {
       books: () => books,
+      cats: () => cats,
+      currencies: () => {
+        const API = new CryptoAPI()
+        return API.getCurrencyPrices()
+      }
     },
   };
 
@@ -55,4 +95,4 @@ const server = new ApolloServer({
     listen: { port: 4000 },
   });
   
-  console.log(`🚀  Server ready at: ${url}`);
+  console.log(`🚀  Server ready at: ${url}`);  
